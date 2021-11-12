@@ -9,6 +9,7 @@ AWAIT ASYNC BREAK CONTINUE DEDENT ENDMARKER INDENT MUST NUMBER PASS STRING TYPE_
 RETURN FROM IN FINALLY NOT AND OR ASSERT EXCEPT TRUE FALSE NONE
 AS BLOCK FOR IF ELSE ELIF FROM IMPORT NAME DEL GLOBAL NONLOCAL DEF
 AUGASSIGNADD AUGASSIGNSUBTRACT AUGASSIGNDIVIDE AUGASSIGNMUT AUGASSIGNMOD
+TRY WITH YIELD CLASS IS
 DOUBLESTAR WHILE
 %left  '+' '-'
 %left  '*' '/'
@@ -99,15 +100,15 @@ yield_stmt: yield_expr
 assert_stmt: ASSERT expression [',' expression ]
             ;
 del_stmt:
-        | 'del' del_targets &(';' | NEWLINE)
+        | DEL del_targets &(';' | NEWLINE)
         ;
 import_stmt: import_name | import_from
             ;
-import_name: 'import' dotted_as_names
+import_name: IMPORT dotted_as_names
             ;
 import_from:
-            | FROM ('.' | '...')* dotted_name 'import' import_from_targets
-            | FROM ('.' | '...')'+' 'import' import_from_targets
+            | FROM ('.' | '...')* dotted_name IMPORT import_from_targets
+            | FROM ('.' | '...')'+' IMPORT import_from_targets
             ;
 import_from_targets:
                     | '(' import_from_as_names [','] ')' 
@@ -131,36 +132,36 @@ dotted_name:
           | NAME
           ;
 if_stmt:
-          | 'if' named_expression ':' BLOCK elif_stmt
-          | 'if' named_expression ':' BLOCK [else_block]
+          | IF named_expression ':' BLOCK elif_stmt
+          | IF named_expression ':' BLOCK [else_block]
           ;
 elif_stmt:
-          | 'elif' named_expression ':' BLOCK elif_stmt
-          | 'elif' named_expression ':' BLOCK [else_block]
+          | ELIF named_expression ':' BLOCK elif_stmt
+          | ELIF named_expression ':' BLOCK [else_block]
           ;
 else_block:
           | ELSE ':' BLOCK
           ;
 while_stmt:
-          | 'while' named_expression ':' BLOCK [else_block]
+          | WHILE named_expression ':' BLOCK [else_block]
           ;
 for_stmt:
           | FOR star_targets IN ~ star_expressions ':' [TYPE_COMMENT] BLOCK [else_block
           | ASYNC FOR star_targets IN ~ star_expressions ':' [TYPE_COMMENT] BLOCK [else_block
           ;
 with_stmt:
-          | 'with' '(' ','.with_item'+' ','? ')' ':' BLOCK
-          | 'with' ','.with_item'+' ':' [TYPE_COMMENT] BLOCK
-          | ASYNC 'with' '(' ','.with_item'+' ','? ')' ':' BLOCK
-          | ASYNC 'with' ','.with_item'+' ':' [TYPE_COMMENT] BLOCK
+          | WITH '(' ','.with_item'+' ','? ')' ':' BLOCK
+          | WITH ','.with_item'+' ':' [TYPE_COMMENT] BLOCK
+          | ASYNC WITH '(' ','.with_item'+' ','? ')' ':' BLOCK
+          | ASYNC WITH ','.with_item'+' ':' [TYPE_COMMENT] BLOCK
           ;
 with_item:
           | expression AS star_target &(',' | ')' | ':')
           | expression
           ;
 try_stmt:
-        | 'try' ':' BLOCK finally_block
-        | 'try' ':' BLOCK except_block'+' [else_block] [finally_block]
+        | TRY ':' BLOCK finally_block
+        | TRY ':' BLOCK except_block'+' [else_block] [finally_block]
         ;
 except_block:
 | EXCEPT expression [AS NAME ] ':' BLOCK
@@ -179,7 +180,8 @@ subject_expr:
 case_block:
 | "case" patterns guard? ':' BLOCK
 ;
-guard: 'if' named_expression
+guard: IF named_expression
+;
 patterns:
 | open_sequence_pattern
 | pattern
@@ -377,7 +379,7 @@ class_def:
 | class_def_raw
 ;
 class_def_raw:
-| 'class' NAME ['(' [arguments] ')' ] ':' BLOCK
+| CLASS NAME ['(' [arguments] ')' ] ':' BLOCK
 ;
 BLOCK:
 | NEWLINE INDENT statements DEDENT 
@@ -413,7 +415,7 @@ expressions:
 | expression
 ;
 expression:
-| disjunction 'if' disjunction ELSE expression
+| disjunction IF disjunction ELSE expression
 | disjunction
 | lambdef
 ;
@@ -464,7 +466,7 @@ disjunction:
 | conjunction
 ;
 conjunction:
-| inversion ('and' inversion )+
+| inversion (AND inversion )+
 | inversion
 ;
 inversion:
@@ -504,9 +506,9 @@ notin_bitwise_or: NOT IN bitwise_or
 ;
 in_bitwise_or: IN bitwise_or
 ;
-isnot_bitwise_or: 'is' NOT bitwise_or
+isnot_bitwise_or: IS NOT bitwise_or
 ;
-is_bitwise_or: 'is' bitwise_or
+is_bitwise_or: IS bitwise_or
 ;
 bitwise_or:
 | bitwise_or '|' bitwise_xor
@@ -621,12 +623,12 @@ for_if_clauses:
 | for_if_clause+
 ;
 for_if_clause:
-| ASYNC FOR star_targets IN ~ disjunction ('if' disjunction )*
-| FOR star_targets IN ~ disjunction ('if' disjunction )*
+| ASYNC FOR star_targets IN ~ disjunction (IF disjunction )*
+| FOR star_targets IN ~ disjunction (IF disjunction )*
 ;
 yield_expr:
-| 'yield' FROM expression
-| 'yield' [star_expressions]
+| YIELD FROM expression
+| YIELD [star_expressions]
 ;
 arguments:
 | args [','] &')' 
